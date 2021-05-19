@@ -30,6 +30,8 @@ namespace communicator_server
 
         public void Connect()
         {
+            dataTable = new DataTable();
+            command = new MySqlCommand();
             connection.Open();
             command.Connection = connection;
         }
@@ -74,6 +76,27 @@ namespace communicator_server
             CloseConnetion();
             return isExist; 
 
+        }
+
+        public bool IsExist(NewChatData newChatData)
+        {
+            string chatName = $@"'{newChatData.ChatName}'";
+            if(newChatData.Nicks.Count < 3)
+            {
+                string nick1 = newChatData.Nicks[0].Nick;
+                string nick2 = newChatData.Nicks[1].Nick;
+                chatName = $@"'{nick1},{nick2}', '{nick2},{nick1}'";
+            }
+
+            Connect();
+
+            command.CommandText = $@"SELECT id FROM chats WHERE name IN ({chatName})";
+            dataReader = command.ExecuteReader();
+            dataTable.Load(dataReader);
+            bool isExist = dataTable.Rows.Count > 0;
+
+            CloseConnetion();
+            return isExist;
         }
 
         public List<ChatListItemData> GetUserChats(UserData user)
@@ -147,22 +170,63 @@ namespace communicator_server
         public void AddMessageToChat(MessageSendData message, UserData user)
         {
             Connect();
+            command.CommandText = $"SELECT MAX(m.message_order) + 1 as 'nextOrderNumber' FROM messages m WHERE m.id_chat = \'{message.ChatId}\' GROUP BY m.id_chat";
+            dataReader = command.ExecuteReader();
+            dataTable.Load(dataReader);
+            string maxId = "1";
+            if(dataTable.Rows.Count > 0)
+            {
+                maxId = dataTable.Rows[0]["nextOrderNumber"].ToString();
+            }
 
+            CloseConnetion();
+
+            Connect();
             command.CommandText = $@"INSERT INTO messages (id_chat, id_user, message_order, content)
                 VALUES(
                     '{message.ChatId}',
                     '{user.id}',
-                    (
-                        SELECT MAX(m.message_order) + 1 as 'nextOrderNumber'
-                        FROM messages m
-                        WHERE m.id_chat = '{message.ChatId}'
-                        GROUP BY m.id_chat
-                    ),
+                    '{maxId}',
                     '{message.Content}'
                 )";
             dataReader = command.ExecuteReader();
 
             CloseConnetion();
+        }
+
+        public void CreateNewChat(NewChatData newChatData)
+        {
+            Connect();
+            command.CommandText = $"INSERT INTO chats (name) VALUES (\"{newChatData.ChatName}\")";
+            dataReader = command.ExecuteReader();
+            CloseConnetion();
+
+            Connect();
+            command.CommandText = $"SELECT id FROM chats WHERE name = \"{newChatData.ChatName}\"";
+            dataReader = command.ExecuteReader();
+            dataTable.Load(dataReader);
+            CloseConnetion();
+
+            int chatId = int.Parse(dataTable.Rows[0]["id"].ToString());
+            Console.WriteLine($"new chat id: {chatId}");
+
+            foreach(NickData nick in newChatData.Nicks)
+            {
+                Connect();
+                command.CommandText = $"SELECT id FROM users WHERE nick = \"{nick.Nick}\"";
+                dataReader = command.ExecuteReader();
+                dataTable.Load(dataReader);
+                CloseConnetion();
+
+                int userId = int.Parse(dataTable.Rows[0][0].ToString());
+                Console.WriteLine($"new user in group id: {userId}");
+
+
+                Connect();
+                command.CommandText = $"INSERT INTO chat_user (id_chat, id_user) VALUES (\"{chatId}\", \"{userId}\")";
+                dataReader = command.ExecuteReader();
+                CloseConnetion();
+            }
         }
 
         public void CloseConnetion()

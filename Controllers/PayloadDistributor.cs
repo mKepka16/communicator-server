@@ -29,6 +29,12 @@ namespace communicator_server.Controllers
                 case "messageSend":
                     new MessageSendController(payload.data, client);
                     break;
+                case "isUserExist":
+                    new UserExistenceController(payload.data, client);
+                    break;
+                case "createChat":
+                    new CreateChatController(payload.data, client);
+                    break;
             }
         }
     }
