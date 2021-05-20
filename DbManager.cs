@@ -19,9 +19,7 @@ namespace communicator_server
         MySqlConnection connection = new MySqlConnection(); 
         MySqlCommand command = new MySqlCommand();
         DataTable dataTable = new DataTable();
-        MySqlDataAdapter dataAdapter = new MySqlDataAdapter();
         MySqlDataReader dataReader;
-        DataSet dataSet = new DataSet();
 
         public DbManager()
         {
@@ -102,7 +100,6 @@ namespace communicator_server
         public List<ChatListItemData> GetUserChats(UserData user)
         {
             Connect();
-            Console.WriteLine("Connection started");
 
             List<ChatListItemData> chats = new List<ChatListItemData>();
 
@@ -115,7 +112,6 @@ namespace communicator_server
                 int id = int.Parse(row["id"].ToString());
                 string name = row["name"].ToString();
                 int numberOfMembers = int.Parse(row["numberOfMembers"].ToString());
-                Console.WriteLine(new ChatListItemData(id, name, numberOfMembers, user.nick).ToString());
 
                 chats.Add(new ChatListItemData(id, name, numberOfMembers, user.nick));
             }
@@ -208,7 +204,6 @@ namespace communicator_server
             CloseConnetion();
 
             int chatId = int.Parse(dataTable.Rows[0]["id"].ToString());
-            Console.WriteLine($"new chat id: {chatId}");
 
             foreach(NickData nick in newChatData.Nicks)
             {
@@ -219,7 +214,6 @@ namespace communicator_server
                 CloseConnetion();
 
                 int userId = int.Parse(dataTable.Rows[0][0].ToString());
-                Console.WriteLine($"new user in group id: {userId}");
 
 
                 Connect();

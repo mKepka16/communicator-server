@@ -41,13 +41,13 @@ namespace communicator_server
                 {
                     readData = binaryReader.ReadString();
                     Console.WriteLine("From client: " + readData);
+                    Console.WriteLine();
                     Payload payload = Payload.Deserialize(readData);
                     PayloadDistributor.Distribute(payload, this); 
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine(ex);
                 Disconnect();
             }
         }
@@ -57,6 +57,7 @@ namespace communicator_server
             try
             {
                 Console.WriteLine("To client: " + data);
+                Console.WriteLine();
                 binaryWriter.Write(data);
                 binaryWriter.Flush();
             }
@@ -68,10 +69,10 @@ namespace communicator_server
 
         public void Disconnect()
         {
+            Console.WriteLine($"{userData.nick} disconnected");
             clients.Remove(this);
             if (users.Contains(this)) users.Remove(this);
             tcpClient.Close();
-            Console.WriteLine($"Client disconnected");
         }
     }
 }

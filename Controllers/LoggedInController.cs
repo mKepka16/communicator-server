@@ -16,8 +16,6 @@ namespace communicator_server.Controllers
         public LoggedInController(Client client)
         {
             this.client = client;
-            UserData data = this.client.userData;
-            Console.WriteLine($"User: {data.nick}, id: {data.id} is logged in.");
 
             List<ChatListItemData> chats = dbManager.GetUserChats(client.userData);
             ChatListData chatListData = new ChatListData(chats);

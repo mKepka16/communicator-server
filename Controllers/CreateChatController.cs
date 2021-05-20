@@ -40,9 +40,21 @@ namespace communicator_server.Controllers
             Payload payload = new Payload("groupDoesNotExist", "");
             client.Write(payload.ToString());
 
-            List<ChatListItemData> chats = dbManager.GetUserChats(client.userData);
-            ChatListData chatListData = new ChatListData(chats);
-            client.Write(new Payload("chatsList", chatListData.ToString()).ToString());
+
+            List<string> nicks = new List<string>();
+            foreach(NickData item in newChatData.Nicks)
+            {
+                nicks.Add(item.Nick);
+            }
+
+            IEnumerable<Client> clientsInGroup = Client.users.Where(cl => nicks.Contains(cl.userData.nick));
+            foreach (Client cl in clientsInGroup)
+            {
+                List<ChatListItemData> chats = dbManager.GetUserChats(cl.userData);
+                ChatListData chatListData = new ChatListData(chats);
+                cl.Write(new Payload("chatsList", chatListData.ToString()).ToString());
+            }
+            
         }
     }
 }
